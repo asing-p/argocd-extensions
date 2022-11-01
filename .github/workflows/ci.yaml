@@ -12,7 +12,7 @@ on:
 
 jobs:
   test:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@master
       - uses: actions/cache@v1
@@ -21,16 +21,16 @@ jobs:
           key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
           restore-keys: |
             ${{ runner.os }}-go-
-      - uses: actions/setup-go@v1
+      - name: Setup Golang
+        uses: actions/setup-go@v3
         with:
-          go-version: '1.16.2'
-      - name: Add ~/go/bin to PATH
+          go-version: ${{ env.GOLANG_VERSION }}
+      - name: Download all Go modules
         run: |
-          echo "/home/runner/go/bin" >> $GITHUB_PATH
-      - name: Validate code generation
+          go mod download
+      - name: Check for tidyness of go.mod and go.sum
         run: |
-          set -xo pipefail
-          go mod download && go mod tidy && make generate
+          go mod tidy
           git diff --exit-code -- .
       - run: make test
       - uses: golangci/golangci-lint-action@v2
